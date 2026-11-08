@@ -14,6 +14,7 @@
 @media(max-width:740px){.shell{padding:23px 14px}.masthead{display:block}h1{font-size:27px}.eyebrow{font-size:10px}.notice{max-width:none;margin-top:17px}.tabs{margin:22px 0 17px;gap:2px;padding:10px 0}.tabs button{padding:7px 10px;font-size:13px}.layout{display:block}.panel{padding:18px 14px}.aside{position:static;margin-top:17px}.map-frame{height:470px}.graph-box svg{height:360px}.stats{grid-template-columns:repeat(3,1fr)}.toolbar button{font-size:13px}.panel-head h2{font-size:20px}.source-detail{scroll-margin-top:20px}.event{gap:8px}.footer{font-size:10px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 /*BOOKMAPS_CHARACTERS_CSS*/
+/*BOOKMAPS_READING_CSS*/
 </style>
 </head>
 <body>
@@ -33,9 +34,9 @@
   <div class="layout">
     <main>
       <section class="panel" id="overview" role="tabpanel" aria-labelledby="tab-overview">
-        <div class="panel-head"><div><div class="kicker">01 / 看见全书</div><h2>一张图，理清阅读线索</h2><p class="muted">拖动与缩放导图，点击分支展开；点击「出处」查看原文。</p></div><a class="download" href="overview.md" download>下载总览 Markdown ↗</a></div>
-        <details class="outline" id="reading-outline"><summary>展开大纲，逐条阅读线索</summary><div class="outline-tree" id="outline-tree"></div></details>
-        <iframe class="map-frame" id="overview-map" title="全书结构交互思维导图" sandbox="allow-scripts"></iframe>
+        <header class="reading-hero"><div class="kicker">01 / 看见全书</div><div class="panel-head"><div><h2>先看全书，再读细节</h2><p>选择一组阅读线索，展开故事阶段、人物走向与原文依据。</p></div><a class="download" href="overview.md" download>导出总览笔记 ↗</a></div><div class="reading-stats" id="overview-stats"></div></header>
+        <div class="overview-body"><details class="overview-directory" id="overview-path-picker" aria-label="总览线索分类" open><summary id="overview-path-title">阅读路径</summary><div class="overview-categories" id="overview-categories"></div></details><div class="overview-reader" id="overview-reader"><div class="overview-group-head"><div><h3 id="overview-group-title"></h3><p id="overview-group-note"></p></div></div><div class="story-stages" id="overview-content"></div></div></div>
+        <details class="overview-notes"><summary>版本与阅读说明</summary><div id="overview-edition"></div></details>
       </section>
       <section class="panel" id="characters" role="tabpanel" aria-labelledby="tab-characters" hidden>
         <div class="panel-head"><div><div class="kicker">02 / 人物之间</div><h2>从一个人物，读懂一张关系网</h2><p class="muted">选择阅读中心，每次看六位直接相关人物；点击关系卡片，查看变化与出处。</p></div><a class="download" href="characters.md" download>导出人物笔记 ↗</a></div>
@@ -60,8 +61,8 @@
         <div id="events" class="timeline"></div>
       </section>
       <section class="panel" id="themes" role="tabpanel" aria-labelledby="tab-themes" hidden>
-        <div class="panel-head"><div><div class="kicker">04 / 文字之外</div><h2>主题与意象，保留多种读法</h2><p class="muted">解释与事实分开呈现，沿着证据判断哪种读法更有说服力。</p></div><a class="download" href="themes.md" download>下载主题 Markdown ↗</a></div>
-        <iframe class="map-frame" id="themes-map" title="主题意象交互思维导图" sandbox="allow-scripts"></iframe><div id="theme-cards"></div>
+        <header class="reading-hero"><div class="kicker">04 / 主题与意象</div><div class="panel-head"><div><h2>从一条读法，走回原文</h2><p>先读核心解释，再沿着引用检查证据，也为其他理解留下位置。</p></div><a class="download" href="themes.md" download>导出主题笔记 ↗</a></div></header>
+        <div class="theme-workspace"><details class="theme-picker" id="theme-picker" open><summary id="theme-picker-title">主题目录</summary><label for="theme-search">检索主题、人物或原文关键词</label><input id="theme-search" type="search" placeholder="例如：人物、旧物、梦境" autocomplete="off"><p id="theme-count" class="theme-count" aria-live="polite"></p><div id="theme-directory" class="theme-directory" aria-label="主题列表"></div></details><div class="theme-reader" id="theme-reader"><div class="theme-reader-head"><span class="theme-position" id="theme-position" aria-live="polite"></span><div class="theme-reader-controls"><button id="theme-prev" aria-label="上一个主题">← 上一个</button><button id="theme-next" aria-label="下一个主题">下一个 →</button></div></div><article id="theme-content"></article></div></div>
       </section>
       <section class="panel" id="sources" role="tabpanel" aria-labelledby="tab-sources" hidden>
         <div class="panel-head"><div><div class="kicker">05 / 回到原文</div><h2>每一条线索，都有来处</h2><p class="muted">EPUB 按章节与段落定位；PDF 按文件物理页码定位。</p></div><a class="download" href="sources.md" download>下载出处 Markdown ↗</a></div>
@@ -81,7 +82,7 @@
 <script>
 const DATA = /*BOOKMAPS_DATA*/;
 (() => {
-  const {book, analysis, sources, maps} = DATA;
+  const {book, analysis, sources} = DATA;
   const byId = id => document.getElementById(id);
   const label = {fact:'原文事实',interpretation:'阅读解释',uncertain:'待确认',story:'故事',dream:'梦境',memory:'回忆',rumor:'传闻',hypothesis:'猜测',narrator:'叙述者判断'};
   const sourceIndex = new Map(sources.map(s=>[s.id,s]));
@@ -91,7 +92,7 @@ const DATA = /*BOOKMAPS_DATA*/;
   let currentTab = 'overview';
   let person = analysis.characters.find(p=>p.id===saved.person)?.id || analysis.characters[0]?.id;
   let order = saved.order === 'story_order' ? 'story_order' : 'narrative_order';
-  const save = () => {try {localStorage.setItem(stateKey,JSON.stringify({tab:currentTab,person,order}));} catch {}};
+  const save = () => {try {localStorage.setItem(stateKey,JSON.stringify({...saved,tab:currentTab,person,order}));} catch {}};
   const element = (tag,text,className) => {const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;};
   const paragraph = (root,text,cls) => root.append(element('p',text,cls));
   const locator = source => `${source.section_title} · ${source.locator.pdf_page ? `PDF 文件第 ${source.locator.pdf_page} 页` : source.locator.epub_path} · 第 ${source.locator.paragraph} 段`;
@@ -101,16 +102,15 @@ const DATA = /*BOOKMAPS_DATA*/;
     const source=sourceIndex.get(id);if(!source)return;
     const detail=byId('source-detail');detail.replaceChildren(element('h3',source.section_title),element('p',locator(source),'muted'),element('blockquote',quote||source.text),element('p',source.id,'muted'));
     const full=element('button','查看完整原文段落');full.addEventListener('click',()=>{byId('source-search').value='';renderSources();selectTab('sources');const entry=byId(`source-${id}`);entry.open=true;entry.classList.add('highlight');entry.scrollIntoView({behavior:'smooth',block:'start'});});detail.append(full);
-    if(currentTab==='characters'){
+    if(['characters','overview','themes'].includes(currentTab)){
       const dialog=byId('evidence-dialog'),content=byId('dialog-source-detail');content.replaceChildren(...[...detail.childNodes].map(n=>n.cloneNode(true)));content.querySelector('button').addEventListener('click',()=>{dialog.close();full.click();});dialog.showModal();
     }else if(matchMedia('(max-width:740px)').matches)detail.scrollIntoView({behavior:'smooth',block:'start'});
   }
   function selectTab(tab) {
     if(!['overview','characters','timeline','themes','sources'].includes(tab))tab='overview';
     currentTab=tab;document.body.dataset.view=tab;
-    if(tab!=='characters'&&byId('evidence-dialog').open)byId('evidence-dialog').close();
+    if(byId('evidence-dialog').open)byId('evidence-dialog').close();
     for(const button of document.querySelectorAll('[data-tab]')){const active=button.dataset.tab===tab;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;byId(button.dataset.tab).hidden=!active;}
-    if(tab==='overview'||tab==='themes'){const frame=byId(`${tab}-map`);if(!frame.srcdoc)frame.srcdoc=maps[tab];}
     save();
   }
   byId('book-title').textContent=analysis.title;document.title=`${analysis.title} · 阅读图谱`;
@@ -121,22 +121,17 @@ const DATA = /*BOOKMAPS_DATA*/;
   paragraph(byId('verification-note'),`文件：${book.source.filename}`);paragraph(byId('verification-note'),`SHA-256：${book.source.sha256}`);
   const warnings=element('ul');for(const warning of book.warnings)warnings.append(element('li',warning));byId('verification-note').append(warnings);
   const tabs=[...document.querySelectorAll('[data-tab]')];
-  function outlineNodes(root,nodes){for(const node of nodes){if(node.children.length){const details=element('details');details.append(element('summary',node.label));const content=element('div');outlineNodes(content,node.children);details.append(content);root.append(details);}else{const leaf=element('div',undefined,'outline-leaf');paragraph(leaf,node.label);if(node.classification!=='fact'||node.layer!=='story')badges(leaf,node);referenceButtons(leaf,node);root.append(leaf);}}}
-  outlineNodes(byId('outline-tree'),analysis.overview);
-  const smallScreen=matchMedia('(max-width:740px)');
-  if(smallScreen.matches)byId('reading-outline').open=true;
-  smallScreen.addEventListener('change',event=>{if(event.matches)byId('reading-outline').open=true;});
   tabs.forEach((button,index)=>{button.addEventListener('click',()=>selectTab(button.dataset.tab));button.addEventListener('keydown',event=>{let next;if(event.key==='ArrowRight')next=(index+1)%tabs.length;if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;if(event.key==='Home')next=0;if(event.key==='End')next=tabs.length-1;if(next!==undefined){event.preventDefault();selectTab(tabs[next].dataset.tab);tabs[next].focus();}});});
-  window.addEventListener('message',event=>{if(!['overview','themes'].some(tab=>event.source===byId(`${tab}-map`).contentWindow))return;if(event.data?.type==='bookmaps-source'&&sourceIndex.has(event.data.id))openSource(event.data.id);});
 
   /*BOOKMAPS_CHARACTERS_JS*/
   function renderEvents(){byId('order-narrative').setAttribute('aria-pressed',String(order==='narrative_order'));byId('order-story').setAttribute('aria-pressed',String(order==='story_order'));const root=byId('events');root.replaceChildren();for(const event of [...analysis.events].sort((a,b)=>(a[order]??Infinity)-(b[order]??Infinity))){const row=element('article',undefined,'event');row.dataset.eventId=event.id;row.append(element('span',event[order]===null?'?':String(event[order]),'event-order'));const content=element('div');content.append(element('h3',event.title));badges(content,event);paragraph(content,event.summary);if(event.uncertainty)paragraph(content,`顺序说明：${event.uncertainty}`,'uncertainty');referenceButtons(content,event);row.append(content);root.append(row);}if(!analysis.events.length)paragraph(root,'本次分析没有事件条目。','empty');save();}
   byId('order-narrative').addEventListener('click',()=>{order='narrative_order';renderEvents();});byId('order-story').addEventListener('click',()=>{order='story_order';renderEvents();});
-  for(const theme of analysis.themes){const card=element('article',undefined,'card');card.append(element('h3',theme.title));badges(card,theme);paragraph(card,theme.description);referenceButtons(card,theme);if(theme.alternative_readings.length){const details=element('details');details.append(element('summary','其他可能的读法'));for(const reading of theme.alternative_readings)paragraph(details,reading);card.append(details);}byId('theme-cards').append(card);}
+  /*BOOKMAPS_READING_JS*/
   function renderSources(){const root=byId('source-list');root.replaceChildren();const query=byId('source-search').value.trim().toLocaleLowerCase();for(const source of sources.filter(s=>`${s.id} ${s.section_title} ${s.text}`.toLocaleLowerCase().includes(query))){const details=element('details',undefined,'source-full');details.id=`source-${source.id}`;details.append(element('summary',`${source.section_title} · ${source.id}`),element('p',locator(source),'muted'),element('p',source.text));root.append(details);}if(!root.childElementCount)paragraph(root,'没有匹配的出处。','empty');}
   byId('source-search').addEventListener('input',renderSources);
   byId('evidence-dialog-close').addEventListener('click',()=>byId('evidence-dialog').close());
-  renderPeople();renderGraph();renderCharacter();renderEvents();renderSources();selectTab(saved.tab||'overview');
+  const initialView=new URLSearchParams(location.search).get('view')||location.hash.slice(1)||document.body.dataset.initialView;
+  renderPeople();renderGraph();renderCharacter();renderEvents();renderSources();selectTab(initialView||saved.tab||'overview');
 })();
 </script>
 </body>

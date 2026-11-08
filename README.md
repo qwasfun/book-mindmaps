@@ -32,7 +32,7 @@ Start-Process (Resolve-Path 'output/demo/maps/index.html').Path
 | --- | --- |
 | `literary-mindmaps` | 本项目定制：分章阅读、人物与事件整合、出处核验及四种交互视图 |
 | `markitdown` | K-Dense 的文档转换技能，配合微软 MarkItDown 读取 EPUB / PDF |
-| `mindmap` | galiacheng 的结构凝练技能；HTML 由本项目调用官方 Markmap CLI 生成，无需 Bash |
+| `mindmap` | galiacheng 的结构凝练技能；可辅助整理笔记，阅读页由本项目直接渲染交互组件 |
 
 已有的 `pdf` 技能可辅助检查 PDF 页面版面。本项目没有复制或更改全局技能。第三方来源和本机安装内容哈希记录在 `skills/third-party.json`。`mindmap` 的 panel 模式不在默认流程中启用。
 
@@ -53,6 +53,8 @@ node tools/render.mjs --book "output/我的图书/source/book.json" --analysis "
 核验器输出 `{"ok":false,"errors":[{"field":"characters.0.evidence.0.quote","code":"quote_mismatch","message":"…具体原因及修正要求…"}]}` 并以状态码 2 退出。渲染器沿用这些字段错误。错误信息不回显提交值。
 
 最终目录包含 `index.html`、独立总览/主题 HTML、五份 Markdown、`analysis.json` 和 `verification.json`。HTML 只内嵌被引用的原文段落，原书与完整提取文本留在本机。分享 HTML 前应知道它包含分析、文件名和这些证据段落。
+
+全书总览直接展示阅读路径与可展开的阶段卡片，可从阶段进入事件和原文依据。主题页按“核心读法、引用证据、其他理解”阅读，支持关键词检索、前后切换和引用弹窗，手机上可收起目录。阅读页无需加载 Markmap 或缩放大图；Markdown 保留为笔记导出。`?view=overview`、`?view=themes` 可直接进入对应视图，独立 HTML 也包含完整交互并可离线使用。
 
 人物页采用独立的交互工作区：人物目录按关联人数排列，以所选人物为中心，每组最多六位直接相关人物；同一对人物的多条关系合并为一条连线，完整方向、阶段说明和证据放在关系档案中。可按线索性质与出处章节筛选，并继续以邻近人物为中心探索。手机上使用可读卡片，原文引用在弹窗中查看。出处章节仅表示证据位置，不代表关系起止时间。
 

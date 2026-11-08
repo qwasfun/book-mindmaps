@@ -85,34 +85,25 @@ export async function render(bookFile, analysisFile, output, force = false) {
   const book = await readData(bookFile,'原文索引');
   const analysis = await readData(analysisFile,'分析文件');
   if (existsSync(output) && (await readdir(output)).length && !force) throw new WorkflowError('输出目录：目录非空；请选择新目录，或确认替换后使用 --force。');
-  const cli = path.join(root, 'node_modules/@markmap/cli/dist/cli.js');
-  if (!existsSync(cli)) throw new WorkflowError('导图依赖：尚未安装；请在项目根目录运行 npm ci。');
   await mkdir(output, { recursive: true });
   const maps = markdownMaps(book, analysis);
-  const html = {};
-  for (const [name, content] of Object.entries(maps)) {
-    await writeFile(path.join(output, `${name}.md`), content, 'utf8');
-    if (name === 'overview' || name === 'themes') {
-      const generated = spawnSync(process.execPath, [cli, path.join(output, `${name}.md`), '-o', path.join(output, `${name}.html`), '--no-open'], { encoding: 'utf8' });
-      if (generated.status !== 0) throw new WorkflowError(`导图 ${name}：Markmap 渲染失败；请检查本地 Node 版本与依赖。`);
-      html[name] = await readFile(path.join(output, `${name}.html`), 'utf8');
-      // A sandboxed frame may only request a locator; the parent checks its source.
-      const bridge = `<script>document.addEventListener('click',function(e){const a=e.composedPath().find(n=>n.tagName&&n.tagName.toLowerCase()==='a');if(!a)return;const h=a.getAttribute('href')||'';const m=h.match(/#source-(s[0-9]+-p[0-9]+)$/);if(m){e.preventDefault();parent.postMessage({type:'bookmaps-source',id:m[1]},'*');}},true);</script>`;
-      html[name] = html[name].replace(/<\/body>/i, `${bridge}</body>`);
-    }
-  }
+  await Promise.all(Object.entries(maps).map(([name,content])=>writeFile(path.join(output,`${name}.md`),content,'utf8')));
   const used = new Set();
   function evidence(items) { for (const item of items) { item.evidence.forEach(e => used.add(e.paragraph_id)); if (item.children) evidence(item.children); } }
   evidence([...analysis.characters, ...analysis.relationships, ...analysis.events, ...analysis.themes, ...analysis.overview]);
   const sources = book.sections.flatMap(section => section.paragraphs.filter(p => used.has(p.id)).map(p => ({ ...p, section_id: section.id, section_title: section.title })));
-  const payload = JSON.stringify({ book: { ...book, sections: book.sections.map(({ paragraphs, ...section }) => ({ ...section, paragraph_count: paragraphs.length })) }, analysis, sources, maps: html }).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
-  const [rawTemplate, characterStyles, characterScript] = await Promise.all([
+  const payload = JSON.stringify({ book: { ...book, sections: book.sections.map(({ paragraphs, ...section }) => ({ ...section, paragraph_count: paragraphs.length })) }, analysis, sources }).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+  const [rawTemplate, characterStyles, characterScript, readingStyles, readingScript] = await Promise.all([
     readFile(path.join(skill, 'assets/reader.html'), 'utf8'),
     readFile(path.join(skill, 'assets/characters.css'), 'utf8'),
     readFile(path.join(skill, 'assets/characters.js'), 'utf8'),
+    readFile(path.join(skill, 'assets/reading.css'), 'utf8'),
+    readFile(path.join(skill, 'assets/reading.js'), 'utf8'),
   ]);
-  const template = rawTemplate.replace('/*BOOKMAPS_CHARACTERS_CSS*/', () => characterStyles).replace('/*BOOKMAPS_CHARACTERS_JS*/', () => characterScript);
-  await writeFile(path.join(output, 'index.html'), template.replace('/*BOOKMAPS_DATA*/', () => payload), 'utf8');
+  const template = rawTemplate.replace('/*BOOKMAPS_CHARACTERS_CSS*/', () => characterStyles).replace('/*BOOKMAPS_CHARACTERS_JS*/', () => characterScript).replace('/*BOOKMAPS_READING_CSS*/', () => readingStyles).replace('/*BOOKMAPS_READING_JS*/', () => readingScript);
+  const page = template.replace('/*BOOKMAPS_DATA*/', () => payload);
+  await writeFile(path.join(output, 'index.html'), page, 'utf8');
+  for (const view of ['overview','themes']) await writeFile(path.join(output,`${view}.html`),page.replace('<body>',`<body data-initial-view="${view}">`),'utf8');
   await writeFile(path.join(output, 'analysis.json'), JSON.stringify(analysis, null, 2), 'utf8');
   await writeFile(path.join(output, 'verification.json'), JSON.stringify({ ...JSON.parse(verify.stdout), source_sha256: book.source.sha256, referenced_paragraphs: sources.length }, null, 2), 'utf8');
   return { ok: true, output: path.join(output, 'index.html'), maps: Object.keys(maps), referenced_paragraphs: sources.length };
