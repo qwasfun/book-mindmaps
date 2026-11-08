@@ -18,12 +18,14 @@
 | 数组 | 其他字段 |
 | --- | --- |
 | `characters` | `name`、`aliases`（字符串数组）、`description` |
-| `relationships` | `from`、`to`（人物 ID）、`label`（关系及变化，可多条） |
+| `relationships` | `from`、`to`（人物 ID）、`label`（关系及变化，可多条）、可选 `short_label`（最多 12 字符的图上关系标签） |
 | `events` | `title`、`summary`、`story_order`（正整数或 null）、`narrative_order`（正整数）、`uncertainty`（未知发生顺序时必填） |
 | `themes` | `title`、`description`、`alternative_readings`（字符串数组） |
 | `overview` | `label`、`children`（递归节点数组；叶子填空数组） |
 
 事件的两个 order 是排序索引，不是书中的实际年份。并行发生可用相同索引；无法确定发生顺序的事件显示在“顺序未定”组，不强行排入时间线。梦境和传闻在两种时间线都明确标注其层次。
+
+`short_label` 由阅读者依据同条关系的原文证据填写，例如“夫妻”“父子”“主仆”“结义兄弟”。用“诬称私情”“单向示意”等明确区分未成立的关系，不用关键词自动猜测身份。它概括两人之间的关系，方向、阶段变化和限定仍保留在完整 `label`、`classification` 与 `layer` 中。同一对人物的不同标签可并列展示；没有填写时，界面仅截取原有说明，不生成新的文学判断。
 
 示例人物（ID 与引文必须替换为真实提取值）：
 

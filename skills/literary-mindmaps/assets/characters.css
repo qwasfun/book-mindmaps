@@ -22,12 +22,20 @@ body[data-view="characters"] .layout>.aside{display:none}
 .relationship-heading p{font-size:12px;color:var(--muted);margin:0}
 .relationship-filters{display:flex;gap:9px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .relationship-filters label{display:grid;gap:4px;font-size:11px;color:var(--muted);flex:1;min-width:130px}
-.relationship-filters select{width:100%;max-width:100%;font:12px/1.5 inherit;border:1px solid var(--line);border-radius:7px;padding:8px;background:var(--card);color:var(--ink);text-overflow:ellipsis}
+.relationship-filters select{width:100%;max-width:100%;font:inherit;font-size:12px;line-height:1.5;border:1px solid var(--line);border-radius:7px;padding:8px;background:var(--card);color:var(--ink);text-overflow:ellipsis}
 .relationship-filters select:focus-visible{outline:3px solid #b18045;outline-offset:3px}
 #characters .graph-box{border:0;border-radius:0;background:transparent;margin-top:6px}
 #characters .graph-box svg{height:auto;aspect-ratio:1000/570;background:transparent;cursor:default;touch-action:auto}
 .relationship-wire{fill:none;stroke:#b5c5b9;stroke-width:2}
 .relationship-wire.selected{stroke:#a57c45;stroke-width:3}
+.relationship-edge-label{cursor:pointer;outline:none}
+.relationship-edge-label rect{fill:var(--card);stroke:var(--line)}
+.relationship-edge-label text{font-size:20px;fill:var(--accent);text-anchor:middle;pointer-events:none}
+.relationship-edge-label .edge-label-long{font-size:16px}
+.relationship-edge-label .edge-label-extra{font-size:14px;fill:var(--muted)}
+.relationship-edge-label.selected rect,.relationship-edge-label:hover rect,.relationship-edge-label:focus rect{fill:#f6efdf;stroke:#a57c45;stroke-width:2}
+.relation-tags{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0 13px}
+.short-relationship-tag{display:inline-block;padding:3px 8px;border:1px solid #d3dfcf;border-radius:5px;background:#edf3e8;color:var(--accent);font-size:12px;line-height:1.7}
 .relation-node{cursor:pointer;outline:none}
 .relation-node rect{fill:#fffefa;stroke:#d8dfd5;stroke-width:1.5;transition:fill .15s,stroke .15s}
 .relation-node:hover rect,.relation-node:focus rect{stroke:#8a9e8c;fill:#f1f5ed}
@@ -80,6 +88,7 @@ body[data-view="characters"] .layout>.aside{display:none}
  .mobile-relation.selected{border-color:#a57c45;background:#f6efdf}
  .mobile-relation strong{display:block;font-size:15px;font-weight:500;overflow-wrap:anywhere;margin-bottom:7px}
  .mobile-relation span{display:block;font-size:11px;color:var(--muted);line-height:1.7}
+ .mobile-relation .short-relationship-tag{display:inline-block;color:var(--accent);font-size:12px;padding:3px 6px;overflow-wrap:anywhere}
  .mobile-relation em{display:block;font-size:10px;font-style:normal;color:var(--gold);margin-top:8px}
  .relation-pager{padding-top:3px}
 }

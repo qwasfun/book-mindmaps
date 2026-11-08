@@ -17,6 +17,8 @@
   function locationTitles(record){return [...new Set(record.evidence.map(e=>sourceIndex.get(e.paragraph_id)?.section_title).filter(Boolean))];}
   function readableLabel(record){return record.label.replace(/^第\d+(?:[—－-]\d+)?回(?:所见)?[：:、]?\s*/,'');}
   function compact(text,size){return text.length>size?text.slice(0,size)+'…':text;}
+  function relationshipTags(records){return [...new Set(records.map(record=>record.short_label||compact(readableLabel(record),10)))];}
+  function tagList(tags){const root=element('span',undefined,'relation-tags');for(const tag of tags)root.append(element('span',tag,'short-relationship-tag'));return root;}
   function renderPeople(){const query=byId('person-search').value.trim().toLocaleLowerCase();const shown=analysis.characters.filter(c=>[c.name,...c.aliases].some(n=>n.toLocaleLowerCase().includes(query))).sort((a,b)=>degree(b.id)-degree(a.id)||personPosition.get(a.id)-personPosition.get(b.id));const root=byId('people');root.replaceChildren();for(const c of shown){const button=element('button');button.setAttribute('aria-label',c.name);button.setAttribute('aria-pressed',String(c.id===person));button.append(element('span',c.name),element('span',`${degree(c.id)} 位关联`,'person-degree'));button.addEventListener('click',()=>selectPerson(c.id));root.append(button);}byId('people-count').textContent=`${shown.length} / ${analysis.characters.length} 人 · 按关联人数排列`;if(!shown.length)paragraph(root,'没有匹配的人物，试试别名。','muted');}
   function selectPerson(id){if(!personIndex.has(id))return;person=id;relatedPerson=null;relationshipPage=0;renderPeople();renderGraph();renderCharacter();if(pickerMedia.matches)picker.open=false;save();}
   byId('person-search').addEventListener('input',renderPeople);
@@ -35,15 +37,18 @@
     byId('relationship-pagination').textContent=total?`第 ${relationshipPage*pageSize+1}—${Math.min((relationshipPage+1)*pageSize,total)} 位 / 共 ${total} 位`:'当前筛选无关系';
     byId('relationship-prev').disabled=relationshipPage===0;byId('relationship-next').disabled=(relationshipPage+1)*pageSize>=total;
     const root=byId('graph-transform');root.replaceChildren();
-    if(focus){const center=svgElement('g',{class:'focus-node'});center.append(svgElement('rect',{x:405,y:231,width:190,height:108,rx:18}),svgElement('text',{x:500,y:277},focus.name.length>7?focus.name.slice(0,6)+'…':focus.name),svgElement('text',{x:500,y:309,class:'focus-node-note'},'当前阅读中心'));root.append(center);}
+    if(focus){const center=svgElement('g',{class:'focus-node'});center.append(svgElement('rect',{x:415,y:231,width:170,height:108,rx:18}),svgElement('text',{x:500,y:277},focus.name.length>7?focus.name.slice(0,6)+'…':focus.name),svgElement('text',{x:500,y:309,class:'focus-node-note'},'当前阅读中心'));root.append(center);}
     const mobile=byId('mobile-relations');mobile.replaceChildren();
     shown.forEach((group,index)=>{
-      const c=group.character,left=index%2===0,row=Math.floor(index/2),x=left?30:710,y=45+row*190;
-      const selected=c.id===relatedPerson,edge=svgElement('path',{class:`relationship-wire${selected?' selected':''}`,d:left?`M405 285 C350 285 360 ${y+50} 290 ${y+50}`:`M595 285 C650 285 640 ${y+50} 710 ${y+50}`});root.prepend(edge);
-      const node=svgElement('g',{class:`relation-node${selected?' selected':''}`,role:'button',tabindex:0,'aria-label':`查看与${c.name}的关系`,'data-person-id':c.id});
-      node.append(svgElement('rect',{x,y,width:260,height:115,rx:14}),svgElement('text',{x:x+130,y:y+35},compact(c.name,10)),svgElement('text',{x:x+130,y:y+66,class:'relation-node-note'},compact(readableLabel(group.records[0]),14)),svgElement('text',{x:x+130,y:y+94,class:'relation-node-count'},`${group.records.length} 条记录 · 查看 →`),svgElement('title',{},c.name+'：'+group.records.map(readableLabel).join('；')));
+      const c=group.character,left=index%2===0,row=Math.floor(index/2),x=left?20:740,y=45+row*190,tags=relationshipTags(group.records);
+      const selected=c.id===relatedPerson,edge=svgElement('path',{class:`relationship-wire${selected?' selected':''}`,d:left?`M415 285 C350 285 350 ${y+57} 260 ${y+57}`:`M585 285 C650 285 650 ${y+57} 740 ${y+57}`});root.prepend(edge);
+      const lx=left?337:663,ly=(285+y+57)/2,visibleTags=tags.length>2?[tags[0],tags.at(-1)]:tags,extra=tags.length-visibleTags.length,lh=visibleTags.length*25+12+(extra?18:0);
+      const edgeLabel=svgElement('g',{class:`relationship-edge-label${selected?' selected':''}`,role:'button',tabindex:0,'aria-label':`${focus.name}与${c.name}：${tags.join('、')}`,'data-person-id':c.id,'data-relation-tags':JSON.stringify(tags)});
+      edgeLabel.append(svgElement('rect',{x:lx-73,y:ly-lh/2,width:146,height:lh,rx:9}));visibleTags.forEach((tag,i)=>edgeLabel.append(svgElement('text',{x:lx,y:ly-lh/2+25+i*25,class:tag.length>6?'edge-label-long':''},compact(tag,8))));if(extra)edgeLabel.append(svgElement('text',{x:lx,y:ly+lh/2-7,class:'edge-label-extra'},`另 ${extra} 种关系`));edgeLabel.append(svgElement('title',{},tags.join('；')));edgeLabel.addEventListener('click',()=>inspectRelationship(c.id));edgeLabel.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspectRelationship(c.id);}});root.append(edgeLabel);
+      const node=svgElement('g',{class:`relation-node${selected?' selected':''}`,role:'button',tabindex:0,'aria-label':`查看与${c.name}的关系：${tags.join('、')}`,'data-person-id':c.id});
+      node.append(svgElement('rect',{x,y,width:240,height:115,rx:14}),svgElement('text',{x:x+120,y:y+31},compact(c.name,9)),svgElement('text',{x:x+120,y:y+61,class:'relation-node-note'},visibleTags[0]),svgElement('text',{x:x+120,y:y+82,class:'relation-node-note'},visibleTags[1]?(visibleTags[1]+(extra?` +${extra}`:'')):''),svgElement('text',{x:x+120,y:y+105,class:'relation-node-count'},`${group.records.length} 条记录 · 查看 →`),svgElement('title',{},c.name+'：'+group.records.map(readableLabel).join('；')));
       node.addEventListener('click',()=>inspectRelationship(c.id));node.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspectRelationship(c.id);}});root.append(node);
-      const card=element('button',undefined,`mobile-relation${selected?' selected':''}`);card.dataset.personId=c.id;card.setAttribute('aria-label',`查看与${c.name}的关系`);card.append(element('strong',c.name),element('span',compact(readableLabel(group.records[0]),34)),element('em',`${group.records.length} 条记录 · 查看关系 →`));card.addEventListener('click',()=>inspectRelationship(c.id));mobile.append(card);
+      const card=element('button',undefined,`mobile-relation${selected?' selected':''}`);card.dataset.personId=c.id;card.dataset.relationTags=JSON.stringify(tags);card.setAttribute('aria-label',`查看与${c.name}的关系：${tags.join('、')}`);card.append(element('strong',c.name),tagList(tags),element('em',`${group.records.length} 条记录 · 查看关系 →`));card.addEventListener('click',()=>inspectRelationship(c.id));mobile.append(card);
     });
     if(!total)paragraph(mobile,'没有符合筛选条件的关系，请调整线索性质或出处章节。','relation-empty');
     byId('relationship-empty').hidden=total>0;
@@ -57,12 +62,13 @@
     const other=group.character;
     paragraph(root,'关系档案','kicker');root.append(element('h3',`${focus.name} ↔ ${other.name}`,'relationship-inspector-title'));
     paragraph(root,`${group.records.length} 条有出处的关系记录；逐条展开阅读。`,'relationship-inspector-subtitle');
+    root.append(tagList(relationshipTags(group.records)));
     const refocus=element('button',`以${other.name}为中心继续探索`,'refocus-person');refocus.addEventListener('click',()=>{byId('person-search').value='';selectPerson(other.id);});root.append(refocus);
     const bio=element('details',undefined,'inspector-bio');bio.append(element('summary',`${other.name}的人物小传`));paragraph(bio,other.description);if(other.aliases.length)paragraph(bio,`别名：${other.aliases.join('、')}`);referenceButtons(bio,other);root.append(bio);
     const sourceOrder=r=>Math.min(...r.evidence.map(e=>sources.findIndex(s=>s.id===e.paragraph_id)));
     for(const [i,r]of [...group.records].sort((a,b)=>sourceOrder(a)-sourceOrder(b)).entries()){
       const record=element('details',undefined,'relationship-record');record.dataset.relationshipId=r.id;record.open=i===0;
       const heading=element('summary');const titles=locationTitles(r);heading.append(element('span',titles.slice(0,3).join(' / ')+(titles.length>3?` 等 ${titles.length} 个出处分节`:''),'record-locator'),element('span',compact(readableLabel(r),55)));record.append(heading);
-      badges(record,r);paragraph(record,`${personIndex.get(r.from).name} → ${personIndex.get(r.to).name}`,'record-direction');paragraph(record,r.label);referenceButtons(record,r);root.append(record);
+      record.append(tagList(relationshipTags([r])));badges(record,r);paragraph(record,`${personIndex.get(r.from).name} → ${personIndex.get(r.to).name}`,'record-direction');paragraph(record,r.label);referenceButtons(record,r);root.append(record);
     }
   }

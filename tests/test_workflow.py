@@ -57,6 +57,15 @@ class WorkflowTests(unittest.TestCase):
         dream = next(e for e in self.analysis["events"] if e["layer"] == "dream")
         self.assertIn("不是实际毁塔", dream["summary"])
 
+    def test_short_relationship_labels_are_optional_and_bounded(self):
+        analysis = copy.deepcopy(self.analysis)
+        analysis['relationships'][0].pop('short_label', None)
+        self.assertEqual(maps.validate(self.book, analysis), [])
+        for invalid in ['   ', '很长的关系标签不应挤满整张人物关系图']:
+            analysis['relationships'][0]['short_label'] = invalid
+            errors = maps.validate(self.book, analysis)
+            self.assertTrue(any(e['field'] == 'relationships.0.short_label' for e in errors))
+
     def test_pending_template_is_not_a_finished_analysis(self):
         errors = maps.validate(self.book, maps.init_analysis(self.book))
         self.assertTrue(errors)

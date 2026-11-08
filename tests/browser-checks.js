@@ -70,7 +70,22 @@ async page => {
   const visited=new Set(),records=new Set();
   if(fixture.characters.length){
     const first=fixture.characters[0];await page.locator('#people').getByRole('button',{name:first.name,exact:true}).click();
-    while(true){const ids=await page.locator('.relation-node').evaluateAll(nodes=>nodes.map(n=>n.dataset.personId));assert(ids.length<=6,'关系图超过六位人物');assert(await page.locator('.relationship-wire').count()===ids.length,'同对人物连线未合并');for(const id of ids){assert(!visited.has(id),'分页人物重复');visited.add(id);await page.locator(`.relation-node[data-person-id="${id}"]`).click();for(const record of await page.locator('.relationship-record').evaluateAll(nodes=>nodes.map(n=>n.dataset.relationshipId)))records.add(record);}if(await page.locator('#relationship-next').isDisabled())break;await page.locator('#relationship-next').click();}
+    while(true){
+      const ids=await page.locator('.relation-node').evaluateAll(nodes=>nodes.map(n=>n.dataset.personId));
+      assert(ids.length<=6,'关系图超过六位人物');assert(await page.locator('.relationship-wire').count()===ids.length,'同对人物连线未合并');assert(await page.locator('.relationship-edge-label').count()===ids.length,'连线缺少关系标注');
+      const overlap=await page.locator('#relationship-graph').evaluate(svg=>{const nodes=[...svg.querySelectorAll('.relation-node rect,.focus-node rect')].map(n=>n.getBoundingClientRect());return [...svg.querySelectorAll('.relationship-edge-label rect')].some(label=>{const box=label.getBoundingClientRect();return nodes.some(n=>Math.min(n.right,box.right)>Math.max(n.left,box.left)&&Math.min(n.bottom,box.bottom)>Math.max(n.top,box.top));});});assert(!overlap,'关系标签遮挡人物卡片');
+      for(const [i,id] of ids.entries()){
+        assert(!visited.has(id),'分页人物重复');visited.add(id);
+        const relations=fixture.relationships.filter(r=>(r.from===first.id&&r.to===id)||(r.to===first.id&&r.from===id));
+        const expectedTags=[...new Set(relations.map(r=>{if(r.short_label)return r.short_label;const text=r.label.replace(/^第\d+(?:[—－-]\d+)?回(?:所见)?[：:、]?\s*/,'');return text.length>10?text.slice(0,10)+'…':text;}))];
+        const edge=page.locator(`.relationship-edge-label[data-person-id="${id}"]`),mobile=page.locator(`.mobile-relation[data-person-id="${id}"]`);
+        assert(JSON.stringify(JSON.parse(await edge.getAttribute('data-relation-tags')))===JSON.stringify(expectedTags),'连线关系标签与分析不一致');assert(JSON.stringify(await mobile.locator('.short-relationship-tag').allTextContents())===JSON.stringify(expectedTags),'手机关系标签与分析不一致');
+        const displayed=expectedTags.length>2?[expectedTags[0],expectedTags.at(-1)]:expectedTags;assert(JSON.stringify(await edge.locator('text:not(.edge-label-extra)').allTextContents())===JSON.stringify(displayed.map(t=>t.length>8?t.slice(0,8)+'…':t)),'连线未显示主要关系标签');
+        if(i===0)await edge.press('Enter');else await page.locator(`.relation-node[data-person-id="${id}"]`).click();
+        for(const record of await page.locator('.relationship-record').evaluateAll(nodes=>nodes.map(n=>n.dataset.relationshipId)))records.add(record);
+      }
+      if(await page.locator('#relationship-next').isDisabled())break;await page.locator('#relationship-next').click();
+    }
     const expected=fixture.relationships.filter(r=>r.from===first.id||r.to===first.id);assert(records.size===expected.length&&expected.every(r=>records.has(r.id)),'关系分页丢失记录');await page.locator('#people').getByRole('button',{name:first.name,exact:true}).click();
   }
   await page.getByRole('tab',{name:'双时间线',exact:true}).click();
@@ -80,6 +95,7 @@ async page => {
   for(const width of widths){
     await page.setViewportSize({width,height:1000});
     for(const tab of ['全书总览','人物关系','双时间线','主题意象','原文出处']){await page.getByRole('tab',{name:tab,exact:true}).click();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),`${width}px ${tab} 横向溢出`);}
+    await page.getByRole('tab',{name:'人物关系',exact:true}).click();if(width<1180)assert(await page.locator('.mobile-relations .short-relationship-tag:visible').count()>0,'手机上未直接显示关系标签');await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`output/playwright/characters-labeled-${width}.png`,fullPage:true});
     await page.getByRole('tab',{name:'全书总览',exact:true}).click();if((await page.locator('#overview-path-picker').getAttribute('open'))===null)await page.locator('#overview-path-title').click();await page.locator(`[data-overview-group="${firstGroup.id}"]`).click();
     assert(await page.locator('.stage-title').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize))>=16,'阶段文字过小');await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`output/playwright/overview-native-${width}.png`,fullPage:true});
     await page.getByRole('tab',{name:'主题意象',exact:true}).click();

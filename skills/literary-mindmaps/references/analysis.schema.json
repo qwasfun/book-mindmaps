@@ -42,7 +42,7 @@
     "relationship": {
       "allOf": [{"$ref": "#/$defs/base"}], "unevaluatedProperties": false,
       "required": ["from", "to", "label"],
-      "properties": {"from": {"$ref": "#/$defs/id"}, "to": {"$ref": "#/$defs/id"}, "label": {"$ref": "#/$defs/text"}}
+      "properties": {"from": {"$ref": "#/$defs/id"}, "to": {"$ref": "#/$defs/id"}, "label": {"$ref": "#/$defs/text"}, "short_label": {"type": "string", "minLength": 1, "maxLength": 12, "pattern": "\\S"}}
     },
     "event": {
       "allOf": [{"$ref": "#/$defs/base"}], "unevaluatedProperties": false,
