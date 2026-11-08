@@ -1,0 +1,44 @@
+{
+  "recorded_at": "2026-11-08T07:22:26.148297+00:00",
+  "skills": [
+    {
+      "skill": "markitdown",
+      "repository": "https://github.com/K-Dense-AI/scientific-agent-skills",
+      "path": "skills/markitdown",
+      "installed_ref": "main",
+      "license_source": "https://raw.githubusercontent.com/K-Dense-AI/scientific-agent-skills/main/LICENSE.md",
+      "note": "Installed content is pinned by the recorded SHA-256 hashes; main is not an immutable commit.",
+      "files": {
+        "references/api_reference.md": "79936dc3cc52c3954a1326e995edd43d97d1b03d3bb4d867ca861fe1a31a3f4f",
+        "references/cloud_and_ocr.md": "b6699e835f96e3a6e97d12a1a66871a68c38cbcadf9bf0e28f694d4edfadc319",
+        "references/file_formats.md": "58cc49fa63cff5ea8fd73fc7915a43d2ab822c3b338976758a933919cf0acf7e",
+        "references/mcp_and_plugins.md": "98a97fd541b1abe8edb694d8c6af73797664251d9a89c731a54ef7d216ca8e39",
+        "references/migration.md": "b2966652252d265165809f37d14db136f03ae8469dd604760a08d02f85d11de8",
+        "references/security.md": "42d01ddb6fdf601647b605b485353c8080c2d22fc45429ceb6cc302636a9fd0b",
+        "references/workflows.md": "06f81ea6888626acd667af314f7faa2ee45fd29c7d371049bd3ca9a876e934b6",
+        "scripts/batch_convert.py": "13e64df33ae0c66ebf1ca71e1650de98a4bc4491d429be9067991f1fb7aa9f4f",
+        "scripts/convert_literature.py": "6c28a9b005a252bcfbab4e1a637129f7be30f9f154bb7bb5adb67cf5361b0aed",
+        "scripts/inspect_installation.py": "4b5443c518a7d4f73bc23f0394fe3232581bcfd467f230b6c866212e20e199ce",
+        "SKILL.md": "8c165c18ceaddc9367dd74f65fd60e42c1c3de9d180828ae1ff09a001af42339",
+        "UPSTREAM-LICENSE": "09b02a3c9df3053c55531d503357a9c7cde275970e6c3ceaa1ddf5f0e90b40c1"
+      }
+    },
+    {
+      "skill": "mindmap",
+      "repository": "https://github.com/galiacheng/mindmap-skills",
+      "path": "skills/mindmap",
+      "installed_ref": "main",
+      "license_source": "https://raw.githubusercontent.com/galiacheng/mindmap-skills/main/LICENSE",
+      "note": "Installed content is pinned by the recorded SHA-256 hashes; main is not an immutable commit.",
+      "files": {
+        "references/copilot-tools.md": "c9d9ca73662c0a269dc5f635790294a4809306f3711eb32b122860800be2adca",
+        "references/judge-panel.md": "75f1c9da9a545f17df1d7a60539a425f2ed04c94adf7e8b87d15c5dfe6261a3a",
+        "scripts/degrade-rich.mjs": "1c393aab7b7872cb85ad22005461b6991d4bf7f582274b122060250d4033b9a3",
+        "scripts/degrade-rich.test.mjs": "77b6aa46458ba1c48170f20c7cc9625c41da01484feab150d33d02edebc00335",
+        "scripts/render.sh": "2565691e9a040f786d0a5215345a614eebbdbfdbee094e19ba9c06286dc79b82",
+        "SKILL.md": "10c506c8c4d785b156cac77ad68c6ecafdbb6f7a93b83d9f0924803d4902a7cd",
+        "UPSTREAM-LICENSE": "0283d68ba83851a1e6bd8bbb299325809f97455975d7f646e15bd138584cf275"
+      }
+    }
+  ]
+}

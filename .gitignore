@@ -1,0 +1,25 @@
+.venv/
+node_modules/
+__pycache__/
+.cache/
+.playwright-cli/
+.playwright/
+output/
+.agents/skills/literary-mindmaps/
+# Local books, including plaintext, scans and arbitrary formats inside this folder.
+/books/
+# Also exclude common ebook source formats when accidentally placed elsewhere.
+*.[pP][dD][fF]
+*.[eE][pP][uU][bB]
+*.[mM][oO][bB][iI]
+*.[aA][zZ][wW]
+*.[aA][zZ][wW]3
+*.[kK][fF][xX]
+*.[dD][jJ][vV][uU]
+*.[dD][jJ][vV]
+*.[fF][bB]2
+*.[cC][bB][zZ]
+*.[cC][bB][rR]
+.env
+.env.*
+!.env.example

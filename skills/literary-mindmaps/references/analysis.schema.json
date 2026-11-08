@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_sha256", "title", "language", "scope", "spoilers", "coverage", "characters", "relationships", "events", "themes", "overview"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "title": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "language": {"const": "zh-CN"},
+    "scope": {"const": "full-book"},
+    "spoilers": {"const": true},
+    "coverage": {"type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["section_id", "status", "reason"],
+      "properties": {"section_id": {"type": "string"}, "status": {"enum": ["pending", "read", "excluded"]}, "reason": {"type": "string"}}
+    }},
+    "characters": {"type": "array", "items": {"$ref": "#/$defs/character"}},
+    "relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+    "events": {"type": "array", "items": {"$ref": "#/$defs/event"}},
+    "themes": {"type": "array", "items": {"$ref": "#/$defs/theme"}},
+    "overview": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/node"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9-]*$"},
+    "classification": {"enum": ["fact", "interpretation", "uncertain"]},
+    "layer": {"enum": ["story", "dream", "memory", "rumor", "hypothesis", "narrator"]},
+    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "evidence": {"type": "array", "items": {
+      "type": "object", "additionalProperties": false, "required": ["paragraph_id", "quote"],
+      "properties": {"paragraph_id": {"$ref": "#/$defs/text"}, "quote": {"type": "string", "minLength": 1, "maxLength": 240, "pattern": "\\S"}}
+    }},
+    "base": {
+      "type": "object", "required": ["id", "classification", "layer", "evidence"],
+      "properties": {"id": {"$ref": "#/$defs/id"}, "classification": {"$ref": "#/$defs/classification"}, "layer": {"$ref": "#/$defs/layer"}, "evidence": {"$ref": "#/$defs/evidence"}}
+    },
+    "character": {
+      "allOf": [{"$ref": "#/$defs/base"}], "unevaluatedProperties": false,
+      "required": ["name", "aliases", "description"],
+      "properties": {"name": {"$ref": "#/$defs/text"}, "aliases": {"type": "array", "items": {"$ref": "#/$defs/text"}}, "description": {"$ref": "#/$defs/text"}}
+    },
+    "relationship": {
+      "allOf": [{"$ref": "#/$defs/base"}], "unevaluatedProperties": false,
+      "required": ["from", "to", "label"],
+      "properties": {"from": {"$ref": "#/$defs/id"}, "to": {"$ref": "#/$defs/id"}, "label": {"$ref": "#/$defs/text"}}
+    },
+    "event": {
+      "allOf": [{"$ref": "#/$defs/base"}], "unevaluatedProperties": false,
+      "required": ["title", "summary", "story_order", "narrative_order", "uncertainty"],
+      "properties": {"title": {"$ref": "#/$defs/text"}, "summary": {"$ref": "#/$defs/text"}, "story_order": {"type": ["integer", "null"], "minimum": 1}, "narrative_order": {"type": "integer", "minimum": 1}, "uncertainty": {"type": "string"}}
+    },
+    "theme": {
+      "allOf": [{"$ref": "#/$defs/base"}], "unevaluatedProperties": false,
+      "required": ["title", "description", "alternative_readings"],
+      "properties": {"title": {"$ref": "#/$defs/text"}, "description": {"$ref": "#/$defs/text"}, "alternative_readings": {"type": "array", "items": {"$ref": "#/$defs/text"}}}
+    },
+    "node": {
+      "allOf": [{"$ref": "#/$defs/base"}], "unevaluatedProperties": false,
+      "required": ["label", "children"],
+      "properties": {"label": {"$ref": "#/$defs/text"}, "children": {"type": "array", "items": {"$ref": "#/$defs/node"}}}
+    }
+  }
+}

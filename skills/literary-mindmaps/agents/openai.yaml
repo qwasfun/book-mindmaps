@@ -1,0 +1,4 @@
+interface:
+  display_name: "文学阅读导图"
+  short_description: "从小说原文生成带章节出处的人物关系、情节时间线与主题意象交互导图"
+  default_prompt: "使用 $literary-mindmaps 分析我提供的小说电子书，生成带原文出处的中文阅读导图，允许全书剧透。"

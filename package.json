@@ -1,0 +1,24 @@
+{
+  "name": "book-mindmaps",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "基于原文出处的小说阅读思维导图工作流",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "render": "node tools/render.mjs",
+    "demo": "node tools/demo.mjs",
+    "preview": "node tools/preview.mjs",
+    "check:git": "node tools/check-git-content.mjs",
+    "test": "node tools/test.mjs",
+    "test:browser": "node tests/browser.mjs"
+  },
+  "dependencies": {
+    "@markmap/cli": "1.0.0"
+  },
+  "devDependencies": {
+    "@playwright/cli": "0.1.23"
+  }
+}
