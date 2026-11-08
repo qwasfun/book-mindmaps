@@ -87,6 +87,28 @@ async page => {
       if(await page.locator('#relationship-next').isDisabled())break;await page.locator('#relationship-next').click();
     }
     const expected=fixture.relationships.filter(r=>r.from===first.id||r.to===first.id);assert(records.size===expected.length&&expected.every(r=>records.has(r.id)),'关系分页丢失记录');await page.locator('#people').getByRole('button',{name:first.name,exact:true}).click();
+    const typeCodes=['marriage','family','service','affair','social','power','conflict','other'];
+    const typesOf=r=>r.relationship_types?.length?r.relationship_types:['other'];
+    const palette=await page.locator('.relationship-type-filter:not([data-relationship-type="all"])').evaluateAll(nodes=>nodes.map(n=>({type:n.dataset.relationshipType,color:getComputedStyle(n).color})));
+    assert(palette.length===8&&new Set(palette.map(p=>p.color)).size===8,'八种关系类型未使用不同颜色');
+    for(const code of typeCodes){
+      await page.locator(`[data-relationship-type="${code}"]`).click();assert(await page.locator(`[data-relationship-type="${code}"]`).getAttribute('aria-pressed')==='true','类型筛选未选中');
+      const expectedType=expected.filter(r=>typesOf(r).includes(code)),actualType=new Set(),actualPeople=new Set();
+      while(true){
+        const ids=await page.locator('.relation-node').evaluateAll(nodes=>nodes.map(n=>n.dataset.personId));
+        for(const id of ids){actualPeople.add(id);await page.locator(`.relation-node[data-person-id="${id}"]`).click();const shown=await page.locator('.relationship-record').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.relationshipId,types:JSON.parse(n.dataset.relationTypes)})));assert(shown.every(r=>r.types.includes(code)),'关系详情混入其他类型');shown.forEach(r=>actualType.add(r.id));}
+        if(await page.locator('#relationship-next').isDisabled())break;await page.locator('#relationship-next').click();
+      }
+      assert(actualType.size===expectedType.length&&expectedType.every(r=>actualType.has(r.id)),'类型筛选遗漏或串入关系：'+code);
+      const expectedPeople=new Set(expectedType.map(r=>r.from===first.id?r.to:r.from));assert(actualPeople.size===expectedPeople.size,'类型筛选的关联人物数错误');
+      if(!expectedType.length)assert(await page.locator('#relationship-empty').isVisible(),'空类型缺少具体提示');
+    }
+    const retainedType=typeCodes.find(code=>expected.some(r=>typesOf(r).includes(code)))||'other';
+    await page.locator(`[data-relationship-type="${retainedType}"]`).press('Enter');await page.reload();assert(await page.locator('#characters').isVisible(),'类型筛选后未保留人物页');assert(await page.locator(`[data-relationship-type="${retainedType}"]`).getAttribute('aria-pressed')==='true','刷新后未保留关系类型');
+    const retainedRecords=expected.filter(r=>typesOf(r).includes(retainedType));
+    if(retainedRecords.length){const section=await page.evaluate(pid=>DATA.sources.find(s=>s.id===pid).section_id,retainedRecords[0].evidence[0].paragraph_id);await page.locator('#relationship-section').selectOption(section);await page.locator('#relationship-kind').selectOption('fact');const shown=await page.locator('.relationship-record').evaluateAll(nodes=>nodes.map(n=>n.dataset.relationshipId));assert(await page.evaluate(({ids,section,type})=>ids.every(id=>{const r=DATA.analysis.relationships.find(r=>r.id===id);return r.classification==='fact'&&(r.relationship_types||['other']).includes(type)&&r.evidence.some(e=>DATA.sources.find(s=>s.id===e.paragraph_id).section_id===section);}),{ids:shown,section,type:retainedType}),'类型、性质与章节联合筛选失效');}
+    await page.locator('#relationship-reset').click();assert(await page.locator('#rel-type-all').getAttribute('aria-pressed')==='true'&&await page.locator('#relationship-section').inputValue()==='all'&&await page.locator('#relationship-kind').inputValue()==='all','重置未清除全部筛选');
+    if(expected.some(r=>typesOf(r).includes('marriage'))){await page.locator('#rel-type-marriage').click();await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'output/playwright/characters-marriage-1440.png',fullPage:true});await page.locator('#relationship-reset').click();}
   }
   await page.getByRole('tab',{name:'双时间线',exact:true}).click();
   if(await page.locator('#event-phase').count())await page.locator('#event-phase').selectOption('0-100');
@@ -95,7 +117,8 @@ async page => {
   for(const width of widths){
     await page.setViewportSize({width,height:1000});
     for(const tab of ['全书总览','人物关系','双时间线','主题意象','原文出处']){await page.getByRole('tab',{name:tab,exact:true}).click();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),`${width}px ${tab} 横向溢出`);}
-    await page.getByRole('tab',{name:'人物关系',exact:true}).click();if(width<1180)assert(await page.locator('.mobile-relations .short-relationship-tag:visible').count()>0,'手机上未直接显示关系标签');await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`output/playwright/characters-labeled-${width}.png`,fullPage:true});
+    await page.getByRole('tab',{name:'人物关系',exact:true}).click();if(width<1180)assert(await page.locator('.mobile-relations .short-relationship-tag:visible').count()>0,'手机上未直接显示关系标签');await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`output/playwright/characters-colored-${width}.png`,fullPage:true});
+    if(width===375){assert(await page.locator('#rel-type-marriage').evaluate(e=>e.getBoundingClientRect().height)>=44,'手机类型按钮过小');await page.locator('#rel-type-marriage').click();await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'output/playwright/characters-marriage-375.png',fullPage:true});await page.locator('#relationship-reset').click();}
     await page.getByRole('tab',{name:'全书总览',exact:true}).click();if((await page.locator('#overview-path-picker').getAttribute('open'))===null)await page.locator('#overview-path-title').click();await page.locator(`[data-overview-group="${firstGroup.id}"]`).click();
     assert(await page.locator('.stage-title').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize))>=16,'阶段文字过小');await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`output/playwright/overview-native-${width}.png`,fullPage:true});
     await page.getByRole('tab',{name:'主题意象',exact:true}).click();
@@ -111,5 +134,5 @@ async page => {
   await page.getByRole('tab',{name:'主题意象',exact:true}).click();assert(await page.locator('.theme-title').isVisible(),'离线主题不可读');if(fixture.themes.length>1){const direction=await page.locator('#theme-next').isEnabled()?'#theme-next':'#theme-prev';await page.locator(direction).click();assert(await page.locator('.theme-title').isVisible(),'离线主题切换失败');}
   await page.getByRole('tab',{name:'人物关系',exact:true}).click();await page.locator('#people').getByRole('button',{name:fixture.characters[0].name,exact:true}).click();assert(await page.locator('#focus-name').textContent()===fixture.characters[0].name,'离线人物交互失败');await page.context().setOffline(false);
   assert(errors.length===0,'浏览器错误：'+errors.join(';'));assert(external.length===0,'页面请求了外部资源：'+external.join(';'));
-  return {ok:true,url:origin,source_sha256:fixture.source_sha256,characters:fixture.characters.length,relationships:fixture.relationships.length,events:fixture.events.length,themes:fixture.themes.length,referenced_paragraphs:fixture.sources,overview_groups:fixture.overview.length,overview_nodes:overviewNodes,story_stages:stageCount,theme_quotes:themeQuotes,selected_person_neighbors:visited.size,viewports:widths,checks:['原生总览全部层级完整','阶段事件与时间线联动','总览及主题引用弹窗与出处跳转','全部主题正文与其他读法未改写','全部主题引用匹配与分层展开','主题关键词搜索及空结果','主题切换与状态恢复','全部人物与关系分页回归','双时间线回归','手机目录收起及可读字号','三种宽度五个视图无横向溢出','独立HTML与直达链接','离线交互及零外部请求'],console_errors:errors,external_requests:external};
+  return {ok:true,url:origin,source_sha256:fixture.source_sha256,characters:fixture.characters.length,relationships:fixture.relationships.length,events:fixture.events.length,themes:fixture.themes.length,referenced_paragraphs:fixture.sources,overview_groups:fixture.overview.length,overview_nodes:overviewNodes,story_stages:stageCount,theme_quotes:themeQuotes,selected_person_neighbors:visited.size,viewports:widths,checks:['原生总览全部层级完整','阶段事件与时间线联动','总览及主题引用弹窗与出处跳转','全部主题正文与其他读法未改写','全部主题引用匹配与分层展开','主题关键词搜索及空结果','主题切换与状态恢复','全部人物与关系分页回归','八类独立颜色','逐类型完整分页筛选','类型性质章节联合筛选','刷新保留与一键重置','手机44px类型按钮','双时间线回归','手机目录收起及可读字号','三种宽度五个视图无横向溢出','独立HTML与直达链接','离线交互及零外部请求'],console_errors:errors,external_requests:external};
 }

@@ -96,9 +96,9 @@ def demo_analysis(book):
         item("person-cheng", [keeper_role, keeper], name="程伯", aliases=["守塔人"], description="拿出登记簿、帮助说明信件来历的守塔人。"),
     ]
     analysis["relationships"] = [
-        item("relation-key", [entrusted, repaired], **{"from": "person-lin", "to": "person-shen"}, short_label="托付与合作", label="曾托付钥匙，重逢后一起修灯"),
-        item("relation-letter", [confession], **{"from": "person-shen", "to": "person-lin"}, short_label="邀约归来", label="写信邀请归港"),
-        item("relation-register", [keeper], **{"from": "person-cheng", "to": "person-lin"}, short_label="澄清来信", label="出示登记簿，澄清来信"),
+        item("relation-key", [entrusted, repaired], **{"from": "person-lin", "to": "person-shen"}, short_label="托付与合作", relationship_types=["social"], label="曾托付钥匙，重逢后一起修灯"),
+        item("relation-letter", [confession], **{"from": "person-shen", "to": "person-lin"}, short_label="邀约归来", relationship_types=["social"], label="写信邀请归港"),
+        item("relation-register", [keeper], **{"from": "person-cheng", "to": "person-lin"}, short_label="澄清来信", relationship_types=["social"], label="出示登记簿，澄清来信"),
     ]
     analysis["events"] = [
         item("event-return", [returned], title="归港与匿名来信", summary="林岚回到雾港，收到沈舟递来的无落款信。", story_order=2, narrative_order=1, uncertainty=""),

@@ -18,7 +18,7 @@
 | 数组 | 其他字段 |
 | --- | --- |
 | `characters` | `name`、`aliases`（字符串数组）、`description` |
-| `relationships` | `from`、`to`（人物 ID）、`label`（关系及变化，可多条）、可选 `short_label`（最多 12 字符的图上关系标签） |
+| `relationships` | `from`、`to`（人物 ID）、`label`（关系及变化，可多条）、可选 `short_label`（最多 12 字符的图上关系标签）、可选 `relationship_types`（关系类型数组） |
 | `events` | `title`、`summary`、`story_order`（正整数或 null）、`narrative_order`（正整数）、`uncertainty`（未知发生顺序时必填） |
 | `themes` | `title`、`description`、`alternative_readings`（字符串数组） |
 | `overview` | `label`、`children`（递归节点数组；叶子填空数组） |
@@ -26,6 +26,8 @@
 事件的两个 order 是排序索引，不是书中的实际年份。并行发生可用相同索引；无法确定发生顺序的事件显示在“顺序未定”组，不强行排入时间线。梦境和传闻在两种时间线都明确标注其层次。
 
 `short_label` 由阅读者依据同条关系的原文证据填写，例如“夫妻”“父子”“主仆”“结义兄弟”。用“诬称私情”“单向示意”等明确区分未成立的关系，不用关键词自动猜测身份。它概括两人之间的关系，方向、阶段变化和限定仍保留在完整 `label`、`classification` 与 `layer` 中。同一对人物的不同标签可并列展示；没有填写时，界面仅截取原有说明，不生成新的文学判断。
+
+`relationship_types` 同样由阅读者核对后填写，可多选：`marriage`（夫妻、妻妾、订亲与婚配变化）、`family`（血亲、姻亲、干亲与家内身份纽带）、`service`（主仆、主雇）、`affair`（明确私情、包养或双方调情）、`social`（结义、师徒、合作往来）、`power`（官商、馈赠、庇护等利益关系）、`conflict`（敌对、威胁、诬陷或仇杀）、`other`（其他）。两端人物必须直接符合类型；同为妻妾不等于彼此是夫妻，同为仆役不等于彼此是主仆，单向示意或诬称不能标作双方私情。类型只是阅读索引，不改变原文的事实性质、阶段或同意与否等限定。未填写时归入“其他”，界面不从关键词推断。颜色与类型筛选只读取这些明确字段。
 
 示例人物（ID 与引文必须替换为真实提取值）：
 

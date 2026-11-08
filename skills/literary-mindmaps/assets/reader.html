@@ -44,12 +44,15 @@
           <details class="person-picker" id="person-picker" open><summary id="picker-current">选择人物</summary><label for="person-search">人物目录</label><input id="person-search" type="search" placeholder="姓名或别名" autocomplete="off"><span id="people-count" class="muted" aria-live="polite"></span><div class="people" id="people" aria-label="人物列表"></div></details>
           <div class="relationship-stage">
             <div class="relationship-heading"><div><h3 id="focus-name"></h3><p id="focus-count" aria-live="polite"></p></div><span class="badge">阅读中心</span></div>
+            <div class="relationship-type-heading"><span>按关系类型查看</span><button id="relationship-reset">重置筛选</button></div>
+            <div id="relationship-type-filters" class="relationship-type-filters" role="group" aria-label="关系类型"></div>
+            <p class="relationship-type-help">数字为关联人数，同一人可涉及多种关系。夫妻类含妻妾与婚配。</p>
             <div class="relationship-filters"><label for="relationship-kind">线索性质<select id="relationship-kind"><option value="all">全部线索</option><option value="fact">原文事实</option><option value="interpretation">阅读解释</option><option value="uncertain">待确认</option></select></label><label for="relationship-section">出处章节<select id="relationship-section"><option value="all">全书出处</option></select></label></div>
             <div class="graph-box"><svg id="relationship-graph" viewBox="0 0 1000 570" role="group" aria-label="所选人物的局部关系图"><g id="graph-transform"></g></svg></div>
             <div id="mobile-relations" class="mobile-relations" aria-label="关联人物卡片"></div>
-            <p id="relationship-empty" class="relation-empty" hidden>没有符合条件的关系，请调整筛选。</p>
+            <p id="relationship-empty" class="relation-empty" hidden>当前人物没有符合条件的关系。试试切换人物或重置筛选。</p>
             <div class="relation-pager"><span id="relationship-pagination" aria-live="polite"></span><div><button id="relationship-prev" aria-label="上一组关联人物">← 上一组</button><button id="relationship-next" aria-label="下一组关联人物">下一组 →</button></div></div>
-            <p class="relation-help">标签概括两人之间的关系，不同标签可能对应不同阶段；方向与出处见关系档案。</p>
+            <p class="relation-help">多色连线表示多种关系；标签可能对应不同阶段。类型、性质和章节筛选同时作用于连线、卡片与记录。</p>
             <details class="focus-biography"><summary>阅读中心的人物小传与证据</summary><div id="focus-biography-content"></div></details>
           </div>
           <div class="character-detail" id="character-detail" aria-label="关系详情"></div>

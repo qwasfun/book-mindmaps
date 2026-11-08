@@ -66,6 +66,17 @@ class WorkflowTests(unittest.TestCase):
             errors = maps.validate(self.book, analysis)
             self.assertTrue(any(e['field'] == 'relationships.0.short_label' for e in errors))
 
+    def test_relationship_types_are_optional_unique_and_explicit(self):
+        analysis = copy.deepcopy(self.analysis)
+        analysis['relationships'][0].pop('relationship_types', None)
+        self.assertEqual(maps.validate(self.book, analysis), [])
+        analysis['relationships'][0]['relationship_types'] = ['marriage', 'family']
+        self.assertEqual(maps.validate(self.book, analysis), [])
+        for invalid in [[], ['marriage', 'marriage'], ['unknown'], 'family']:
+            analysis['relationships'][0]['relationship_types'] = invalid
+            errors = maps.validate(self.book, analysis)
+            self.assertTrue(any(e['field'].startswith('relationships.0.relationship_types') for e in errors))
+
     def test_pending_template_is_not_a_finished_analysis(self):
         errors = maps.validate(self.book, maps.init_analysis(self.book))
         self.assertTrue(errors)

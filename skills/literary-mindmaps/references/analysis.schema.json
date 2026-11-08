@@ -42,7 +42,7 @@
     "relationship": {
       "allOf": [{"$ref": "#/$defs/base"}], "unevaluatedProperties": false,
       "required": ["from", "to", "label"],
-      "properties": {"from": {"$ref": "#/$defs/id"}, "to": {"$ref": "#/$defs/id"}, "label": {"$ref": "#/$defs/text"}, "short_label": {"type": "string", "minLength": 1, "maxLength": 12, "pattern": "\\S"}}
+      "properties": {"from": {"$ref": "#/$defs/id"}, "to": {"$ref": "#/$defs/id"}, "label": {"$ref": "#/$defs/text"}, "short_label": {"type": "string", "minLength": 1, "maxLength": 12, "pattern": "\\S"}, "relationship_types": {"type": "array", "minItems": 1, "maxItems": 8, "uniqueItems": true, "items": {"enum": ["marriage", "family", "service", "affair", "social", "power", "conflict", "other"]}}}
     },
     "event": {
       "allOf": [{"$ref": "#/$defs/base"}], "unevaluatedProperties": false,
