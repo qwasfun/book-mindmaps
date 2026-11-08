@@ -54,6 +54,8 @@ node tools/render.mjs --book "output/我的图书/source/book.json" --analysis "
 
 最终目录包含 `index.html`、独立总览/主题 HTML、五份 Markdown、`analysis.json` 和 `verification.json`。HTML 只内嵌被引用的原文段落，原书与完整提取文本留在本机。分享 HTML 前应知道它包含分析、文件名和这些证据段落。
 
+人物页采用独立的交互工作区：人物目录按关联人数排列，以所选人物为中心，每组最多六位直接相关人物；同一对人物的多条关系合并为一条连线，完整方向、阶段说明和证据放在关系档案中。可按线索性质与出处章节筛选，并继续以邻近人物为中心探索。手机上使用可读卡片，原文引用在弹窗中查看。出处章节仅表示证据位置，不代表关系起止时间。
+
 ## 安装与验证
 
 需要 Windows PowerShell 7、Node.js 22+ 和 uv。新机器或修改自定义 Skill 后运行：

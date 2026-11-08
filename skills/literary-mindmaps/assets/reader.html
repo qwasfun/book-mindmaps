@@ -13,6 +13,7 @@
 @media(max-width:1000px){.shell{padding:25px 22px}.layout{grid-template-columns:minmax(0,1fr) 248px;gap:16px}.panel{padding:20px}.aside{padding:17px}h1{font-size:30px}.notice{max-width:210px}.map-frame{height:540px}}
 @media(max-width:740px){.shell{padding:23px 14px}.masthead{display:block}h1{font-size:27px}.eyebrow{font-size:10px}.notice{max-width:none;margin-top:17px}.tabs{margin:22px 0 17px;gap:2px;padding:10px 0}.tabs button{padding:7px 10px;font-size:13px}.layout{display:block}.panel{padding:18px 14px}.aside{position:static;margin-top:17px}.map-frame{height:470px}.graph-box svg{height:360px}.stats{grid-template-columns:repeat(3,1fr)}.toolbar button{font-size:13px}.panel-head h2{font-size:20px}.source-detail{scroll-margin-top:20px}.event{gap:8px}.footer{font-size:10px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+/*BOOKMAPS_CHARACTERS_CSS*/
 </style>
 </head>
 <body>
@@ -37,12 +38,21 @@
         <iframe class="map-frame" id="overview-map" title="全书结构交互思维导图" sandbox="allow-scripts"></iframe>
       </section>
       <section class="panel" id="characters" role="tabpanel" aria-labelledby="tab-characters" hidden>
-        <div class="panel-head"><div><div class="kicker">02 / 人物之间</div><h2>关系，也在故事中变化</h2></div><a class="download" href="characters.md" download>下载人物 Markdown ↗</a></div>
-        <div class="toolbar"><label for="person-search">查找人物</label><input id="person-search" type="search" placeholder="姓名或别名" autocomplete="off"><span id="people-count" class="muted" aria-live="polite"></span></div>
-        <div class="people" id="people" aria-label="人物列表"></div>
-        <div class="toolbar"><button id="neighbor-mode" aria-pressed="false">只看所选人物的关系</button><span class="muted">点击人物查看证据；图中可拖动、缩放。</span></div>
-        <div class="graph-box"><svg id="relationship-graph" viewBox="0 0 1000 700" role="img" aria-label="人物交叉关系图"><defs><marker id="arrow" viewBox="0 0 10 10" refX="31" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9eafa5"></path></marker></defs><g id="graph-transform"></g></svg><div class="graph-controls"><button id="graph-plus" aria-label="放大关系图">＋</button><button id="graph-minus" aria-label="缩小关系图">−</button><button id="graph-reset">复位</button></div></div>
-        <div class="character-detail" id="character-detail"></div>
+        <div class="panel-head"><div><div class="kicker">02 / 人物之间</div><h2>从一个人物，读懂一张关系网</h2><p class="muted">选择阅读中心，每次看六位直接相关人物；点击关系卡片，查看变化与出处。</p></div><a class="download" href="characters.md" download>导出人物笔记 ↗</a></div>
+        <div class="character-workspace">
+          <details class="person-picker" id="person-picker" open><summary id="picker-current">选择人物</summary><label for="person-search">人物目录</label><input id="person-search" type="search" placeholder="姓名或别名" autocomplete="off"><span id="people-count" class="muted" aria-live="polite"></span><div class="people" id="people" aria-label="人物列表"></div></details>
+          <div class="relationship-stage">
+            <div class="relationship-heading"><div><h3 id="focus-name"></h3><p id="focus-count" aria-live="polite"></p></div><span class="badge">阅读中心</span></div>
+            <div class="relationship-filters"><label for="relationship-kind">线索性质<select id="relationship-kind"><option value="all">全部线索</option><option value="fact">原文事实</option><option value="interpretation">阅读解释</option><option value="uncertain">待确认</option></select></label><label for="relationship-section">出处章节<select id="relationship-section"><option value="all">全书出处</option></select></label></div>
+            <div class="graph-box"><svg id="relationship-graph" viewBox="0 0 1000 570" role="group" aria-label="所选人物的局部关系图"><g id="graph-transform"></g></svg></div>
+            <div id="mobile-relations" class="mobile-relations" aria-label="关联人物卡片"></div>
+            <p id="relationship-empty" class="relation-empty" hidden>没有符合条件的关系，请调整筛选。</p>
+            <div class="relation-pager"><span id="relationship-pagination" aria-live="polite"></span><div><button id="relationship-prev" aria-label="上一组关联人物">← 上一组</button><button id="relationship-next" aria-label="下一组关联人物">下一组 →</button></div></div>
+            <p class="relation-help">连线合并同一对人物的多条记录。出处章节仅表示证据位置，不代表关系的起止。</p>
+            <details class="focus-biography"><summary>阅读中心的人物小传与证据</summary><div id="focus-biography-content"></div></details>
+          </div>
+          <div class="character-detail" id="character-detail" aria-label="关系详情"></div>
+        </div>
       </section>
       <section class="panel" id="timeline" role="tabpanel" aria-labelledby="tab-timeline" hidden>
         <div class="panel-head"><div><div class="kicker">03 / 两种时间</div><h2>发生的顺序，讲述的顺序</h2><p class="muted">排序编号表示相对顺序；梦境、回忆和传闻单独标注。</p></div><a class="download" href="timeline.md" download>下载时间线 Markdown ↗</a></div>
@@ -67,6 +77,7 @@
   </div>
   <footer class="footer"><span>结构与出处经过工具核验，文学判断仍需原文复核。</span><span class="hash" id="source-hash"></span></footer>
 </div>
+<dialog id="evidence-dialog" class="evidence-dialog" aria-label="原文引用与定位"><header><p>回到原文 · 引用与定位</p><button id="evidence-dialog-close" aria-label="关闭原文引用">关闭 ×</button></header><div id="dialog-source-detail" class="source-detail"></div></dialog>
 <script>
 const DATA = /*BOOKMAPS_DATA*/;
 (() => {
@@ -80,7 +91,6 @@ const DATA = /*BOOKMAPS_DATA*/;
   let currentTab = 'overview';
   let person = analysis.characters.find(p=>p.id===saved.person)?.id || analysis.characters[0]?.id;
   let order = saved.order === 'story_order' ? 'story_order' : 'narrative_order';
-  let neighbors = false;
   const save = () => {try {localStorage.setItem(stateKey,JSON.stringify({tab:currentTab,person,order}));} catch {}};
   const element = (tag,text,className) => {const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;};
   const paragraph = (root,text,cls) => root.append(element('p',text,cls));
@@ -91,11 +101,14 @@ const DATA = /*BOOKMAPS_DATA*/;
     const source=sourceIndex.get(id);if(!source)return;
     const detail=byId('source-detail');detail.replaceChildren(element('h3',source.section_title),element('p',locator(source),'muted'),element('blockquote',quote||source.text),element('p',source.id,'muted'));
     const full=element('button','查看完整原文段落');full.addEventListener('click',()=>{byId('source-search').value='';renderSources();selectTab('sources');const entry=byId(`source-${id}`);entry.open=true;entry.classList.add('highlight');entry.scrollIntoView({behavior:'smooth',block:'start'});});detail.append(full);
-    if(matchMedia('(max-width:740px)').matches)detail.scrollIntoView({behavior:'smooth',block:'start'});
+    if(currentTab==='characters'){
+      const dialog=byId('evidence-dialog'),content=byId('dialog-source-detail');content.replaceChildren(...[...detail.childNodes].map(n=>n.cloneNode(true)));content.querySelector('button').addEventListener('click',()=>{dialog.close();full.click();});dialog.showModal();
+    }else if(matchMedia('(max-width:740px)').matches)detail.scrollIntoView({behavior:'smooth',block:'start'});
   }
   function selectTab(tab) {
     if(!['overview','characters','timeline','themes','sources'].includes(tab))tab='overview';
-    currentTab=tab;
+    currentTab=tab;document.body.dataset.view=tab;
+    if(tab!=='characters'&&byId('evidence-dialog').open)byId('evidence-dialog').close();
     for(const button of document.querySelectorAll('[data-tab]')){const active=button.dataset.tab===tab;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;byId(button.dataset.tab).hidden=!active;}
     if(tab==='overview'||tab==='themes'){const frame=byId(`${tab}-map`);if(!frame.srcdoc)frame.srcdoc=maps[tab];}
     save();
@@ -116,33 +129,13 @@ const DATA = /*BOOKMAPS_DATA*/;
   tabs.forEach((button,index)=>{button.addEventListener('click',()=>selectTab(button.dataset.tab));button.addEventListener('keydown',event=>{let next;if(event.key==='ArrowRight')next=(index+1)%tabs.length;if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;if(event.key==='Home')next=0;if(event.key==='End')next=tabs.length-1;if(next!==undefined){event.preventDefault();selectTab(tabs[next].dataset.tab);tabs[next].focus();}});});
   window.addEventListener('message',event=>{if(!['overview','themes'].some(tab=>event.source===byId(`${tab}-map`).contentWindow))return;if(event.data?.type==='bookmaps-source'&&sourceIndex.has(event.data.id))openSource(event.data.id);});
 
-  function renderPeople(){const query=byId('person-search').value.trim().toLocaleLowerCase();const shown=analysis.characters.filter(c=>[c.name,...c.aliases].some(n=>n.toLocaleLowerCase().includes(query)));const root=byId('people');root.replaceChildren();for(const c of shown){const b=element('button',c.name);b.setAttribute('aria-pressed',String(c.id===person));b.addEventListener('click',()=>selectPerson(c.id));root.append(b);}byId('people-count').textContent=`${shown.length} / ${analysis.characters.length} 人`;if(!shown.length)paragraph(root,'没有匹配的人物，试试别名。','muted');}
-  function selectPerson(id){person=id;renderPeople();renderGraph();renderCharacter();save();}
-  byId('person-search').addEventListener('input',renderPeople);
-  byId('neighbor-mode').addEventListener('click',()=>{neighbors=!neighbors;byId('neighbor-mode').setAttribute('aria-pressed',String(neighbors));renderGraph();});
-  const svgNS='http://www.w3.org/2000/svg';
-  function svgElement(tag,attrs,text){const e=document.createElementNS(svgNS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,String(v));if(text!==undefined)e.textContent=text;return e;}
-  const svg=byId('relationship-graph'),transform=byId('graph-transform');
-  let zoom=1,tx=0,ty=0,drag;
-  const applyTransform=()=>transform.setAttribute('transform',`translate(${tx} ${ty}) translate(500 350) scale(${zoom}) translate(-500 -350)`);
-  function renderGraph(){transform.replaceChildren();let chars=analysis.characters;
-    if(neighbors){const ids=new Set([person]);for(const r of analysis.relationships){if(r.from===person)ids.add(r.to);if(r.to===person)ids.add(r.from);}chars=chars.filter(c=>ids.has(c.id));}
-    const positions=new Map(chars.map((c,i)=>{const angle=2*Math.PI*i/Math.max(chars.length,1)-Math.PI/2;const radius=chars.length===1?0:Math.min(280,180+chars.length*5);return[c.id,{x:500+Math.cos(angle)*radius*1.25,y:350+Math.sin(angle)*radius}];}));
-    for(const r of analysis.relationships){const from=positions.get(r.from),to=positions.get(r.to);if(!from||!to)continue;const active=r.from===person||r.to===person;const multiple=analysis.relationships.filter(e=>(e.from===r.from&&e.to===r.to)||(e.from===r.to&&e.to===r.from));const offset=(multiple.indexOf(r)-(multiple.length-1)/2)*46;const cx=(from.x+to.x)/2+offset,cy=(from.y+to.y)/2-offset;
-      const line=svgElement('path',{d:`M${from.x},${from.y} Q${cx},${cy} ${to.x},${to.y}`,class:`edge${active?' active':''}`,'marker-end':'url(#arrow)'});line.append(svgElement('title',{},r.label));transform.append(line);const short=r.label.length>14?`${r.label.slice(0,14)}…`:r.label;transform.append(svgElement('text',{x:cx,y:cy-5,'text-anchor':'middle',class:'edge-label'},short));}
-    for(const c of chars){const point=positions.get(c.id);const g=svgElement('g',{transform:`translate(${point.x} ${point.y})`,class:`person${c.id===person?' active':''}`,role:'button',tabindex:0,'aria-label':`查看人物 ${c.name}`});g.append(svgElement('circle',{r:35}),svgElement('text',{},c.name),svgElement('title',{},`${c.name}：${c.description}`));g.addEventListener('click',()=>selectPerson(c.id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectPerson(c.id);}});transform.append(g);}applyTransform();
-  }
-  function setZoom(value){zoom=Math.max(.35,Math.min(4,value));applyTransform();}
-  byId('graph-plus').addEventListener('click',()=>setZoom(zoom*1.25));byId('graph-minus').addEventListener('click',()=>setZoom(zoom/1.25));byId('graph-reset').addEventListener('click',()=>{zoom=1;tx=ty=0;applyTransform();});
-  svg.addEventListener('wheel',e=>{e.preventDefault();setZoom(zoom*(e.deltaY<0?1.12:1/1.12));},{passive:false});
-  svg.addEventListener('pointerdown',e=>{if(e.target.closest('.person'))return;drag={x:e.clientX,y:e.clientY,tx,ty};svg.setPointerCapture(e.pointerId);});svg.addEventListener('pointermove',e=>{if(!drag)return;const rect=svg.getBoundingClientRect();tx=drag.tx+(e.clientX-drag.x)*1000/rect.width;ty=drag.ty+(e.clientY-drag.y)*700/rect.height;applyTransform();});svg.addEventListener('pointerup',()=>drag=undefined);svg.addEventListener('pointercancel',()=>drag=undefined);
-  function renderCharacter(){const root=byId('character-detail');root.replaceChildren();const character=analysis.characters.find(c=>c.id===person);if(!character){paragraph(root,'本次分析没有人物条目。','empty');return;}root.append(element('h3',character.name));if(character.aliases.length)paragraph(root,`别名：${character.aliases.join('、')}`,'muted');badges(root,character);paragraph(root,character.description);referenceButtons(root,character);
-    for(const r of analysis.relationships.filter(r=>r.from===person||r.to===person)){const other=analysis.characters.find(c=>c.id===(r.from===person?r.to:r.from));const card=element('div',undefined,'card');const jump=element('button',other.name,'relationship-jump');jump.addEventListener('click',()=>selectPerson(other.id));card.append(jump);badges(card,r);paragraph(card,`${analysis.characters.find(c=>c.id===r.from).name} → ${analysis.characters.find(c=>c.id===r.to).name}：${r.label}`);referenceButtons(card,r);root.append(card);}}
+  /*BOOKMAPS_CHARACTERS_JS*/
   function renderEvents(){byId('order-narrative').setAttribute('aria-pressed',String(order==='narrative_order'));byId('order-story').setAttribute('aria-pressed',String(order==='story_order'));const root=byId('events');root.replaceChildren();for(const event of [...analysis.events].sort((a,b)=>(a[order]??Infinity)-(b[order]??Infinity))){const row=element('article',undefined,'event');row.dataset.eventId=event.id;row.append(element('span',event[order]===null?'?':String(event[order]),'event-order'));const content=element('div');content.append(element('h3',event.title));badges(content,event);paragraph(content,event.summary);if(event.uncertainty)paragraph(content,`顺序说明：${event.uncertainty}`,'uncertainty');referenceButtons(content,event);row.append(content);root.append(row);}if(!analysis.events.length)paragraph(root,'本次分析没有事件条目。','empty');save();}
   byId('order-narrative').addEventListener('click',()=>{order='narrative_order';renderEvents();});byId('order-story').addEventListener('click',()=>{order='story_order';renderEvents();});
   for(const theme of analysis.themes){const card=element('article',undefined,'card');card.append(element('h3',theme.title));badges(card,theme);paragraph(card,theme.description);referenceButtons(card,theme);if(theme.alternative_readings.length){const details=element('details');details.append(element('summary','其他可能的读法'));for(const reading of theme.alternative_readings)paragraph(details,reading);card.append(details);}byId('theme-cards').append(card);}
   function renderSources(){const root=byId('source-list');root.replaceChildren();const query=byId('source-search').value.trim().toLocaleLowerCase();for(const source of sources.filter(s=>`${s.id} ${s.section_title} ${s.text}`.toLocaleLowerCase().includes(query))){const details=element('details',undefined,'source-full');details.id=`source-${source.id}`;details.append(element('summary',`${source.section_title} · ${source.id}`),element('p',locator(source),'muted'),element('p',source.text));root.append(details);}if(!root.childElementCount)paragraph(root,'没有匹配的出处。','empty');}
   byId('source-search').addEventListener('input',renderSources);
+  byId('evidence-dialog-close').addEventListener('click',()=>byId('evidence-dialog').close());
   renderPeople();renderGraph();renderCharacter();renderEvents();renderSources();selectTab(saved.tab||'overview');
 })();
 </script>

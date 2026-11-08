@@ -106,7 +106,12 @@ export async function render(bookFile, analysisFile, output, force = false) {
   evidence([...analysis.characters, ...analysis.relationships, ...analysis.events, ...analysis.themes, ...analysis.overview]);
   const sources = book.sections.flatMap(section => section.paragraphs.filter(p => used.has(p.id)).map(p => ({ ...p, section_id: section.id, section_title: section.title })));
   const payload = JSON.stringify({ book: { ...book, sections: book.sections.map(({ paragraphs, ...section }) => ({ ...section, paragraph_count: paragraphs.length })) }, analysis, sources, maps: html }).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
-  const template = await readFile(path.join(skill, 'assets/reader.html'), 'utf8');
+  const [rawTemplate, characterStyles, characterScript] = await Promise.all([
+    readFile(path.join(skill, 'assets/reader.html'), 'utf8'),
+    readFile(path.join(skill, 'assets/characters.css'), 'utf8'),
+    readFile(path.join(skill, 'assets/characters.js'), 'utf8'),
+  ]);
+  const template = rawTemplate.replace('/*BOOKMAPS_CHARACTERS_CSS*/', () => characterStyles).replace('/*BOOKMAPS_CHARACTERS_JS*/', () => characterScript);
   await writeFile(path.join(output, 'index.html'), template.replace('/*BOOKMAPS_DATA*/', () => payload), 'utf8');
   await writeFile(path.join(output, 'analysis.json'), JSON.stringify(analysis, null, 2), 'utf8');
   await writeFile(path.join(output, 'verification.json'), JSON.stringify({ ...JSON.parse(verify.stdout), source_sha256: book.source.sha256, referenced_paragraphs: sources.length }, null, 2), 'utf8');

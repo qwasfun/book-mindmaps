@@ -29,21 +29,15 @@ async page => {
   assert(await page.locator('.source-full[open]').count()===1,'对应原文段落没有展开');
 
   await page.getByRole('tab',{name:'人物关系',exact:true}).click();
-  const names=await page.locator('#people button').allTextContents();
+  const names=await page.locator('#people button').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label')));
   assert(names.length===3,'示例人物数量不正确');
-  for(const name of names){await page.locator('#people').getByRole('button',{name,exact:true}).click();assert((await page.locator('#character-detail h3').textContent())===name,`人物选择未显示 ${name}`);}
-  await page.locator('#person-search').fill('阿岚');
-  assert(await page.locator('#people button').count()===1,'人物别名检索失败');
-  await page.locator('#person-search').fill('');
-  const graphBefore=await page.locator('#graph-transform').getAttribute('transform');
-  await page.getByRole('button',{name:'放大关系图',exact:true}).click();
-  assert((await page.locator('#graph-transform').getAttribute('transform'))!==graphBefore,'关系图缩放未生效');
-  await page.getByRole('button',{name:'只看所选人物的关系',exact:true}).click();
-  assert(await page.getByRole('button',{name:'只看所选人物的关系',exact:true}).getAttribute('aria-pressed')==='true','邻接关系过滤未开启');
-  await page.getByRole('button',{name:'只看所选人物的关系',exact:true}).click();
-  const jump=page.locator('#character-detail .relationship-jump').first();
-  const target=await jump.textContent();await jump.click();
-  assert((await page.locator('#character-detail h3').textContent())===target,'关系条目不能跳转到相邻人物');
+  for(const name of names){await page.locator('#people').getByRole('button',{name,exact:true}).click();assert(await page.locator('#focus-name').textContent()===name,'人物切换失败：'+name);}
+  await page.locator('#person-search').fill('阿岚');assert(await page.locator('#people button').count()===1,'别名检索失败');await page.locator('#person-search').fill('');
+  await page.locator('#people').getByRole('button',{name:'林岚',exact:true}).click();
+  assert(await page.locator('.relation-node').count()<=6,'关系图超过六位直接相关人物');
+  await page.locator('.relation-node').first().press('Enter');
+  await page.locator('.relationship-record[open] .ref').first().click();assert(await page.locator('#evidence-dialog').isVisible(),'人物原文弹窗未打开');await page.keyboard.press('Escape');
+  const refocusText=await page.locator('.refocus-person').textContent();await page.locator('.refocus-person').click();assert(refocusText.includes(await page.locator('#focus-name').textContent()),'无法以关联人物为中心探索');
   await page.screenshot({path:'output/playwright/characters-desktop.png',fullPage:true});
 
   await page.getByRole('tab',{name:'双时间线',exact:true}).click();
@@ -92,10 +86,10 @@ async page => {
   await page.frameLocator('#themes-map').getByRole('link').first().waitFor();
   await page.getByRole('tab',{name:'人物关系',exact:true}).click();
   await page.locator('#people').getByRole('button',{name:'林岚',exact:true}).click();
-  assert((await page.locator('#character-detail h3').textContent())==='林岚','离线人物交互失败');
+  assert((await page.locator('#focus-name').textContent())==='林岚','离线人物交互失败');
   assert(external.length===0,'离线产物发起了外部网络请求');
   assert(errors.length===0,`浏览器错误：${errors.join('; ')}`);
   await page.context().setOffline(false);
   const source_sha256=await page.evaluate(()=>DATA.book.source.sha256);
-  return {ok:true,browser:'Microsoft Edge',source_sha256,viewports:widths,views:5,source_links:linkCount,checks:['Markmap 展开折叠及缩放','出处跳转','全部示例人物与别名检索','交叉关系跳转与缩放','双时间线与梦境标注','主题多种读法','阅读状态恢复','小屏文字大纲展开','三种宽度五种视图无横向溢出','内存文档离线加载与零外部请求'],console_errors:errors,external_requests:external};
+  return {ok:true,browser:'Microsoft Edge',source_sha256,viewports:widths,views:5,source_links:linkCount,checks:['Markmap 展开折叠及缩放','出处跳转','全部示例人物与别名检索','局部关系图及人物中心切换','引用弹窗与键盘操作','双时间线与梦境标注','主题多种读法','阅读状态恢复','小屏文字大纲展开','三种宽度五种视图无横向溢出','内存文档离线加载与零外部请求'],console_errors:errors,external_requests:external};
 }
